@@ -22,18 +22,18 @@
 
     <el-form :model="form" inline label-width="100px" class="demo-form-inline">
 
-      <el-form-item label="抓取地址">
-        <el-input v-model="form.remoteSrcUrl" placeholder="抓取地址"></el-input>
+      <el-form-item label="网络地址">
+        <el-input v-model="form.remoteSrcUrl" placeholder="网络抓取地址"></el-input>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="onFetch">抓取</el-button>
+        <el-button type="primary" @click="onFetch">fetch</el-button>
       </el-form-item>
     </el-form>
     <el-upload
       class="upload-demo"
       drag
       :data="form"
-      :action="uploadServer"
+      :action="restApi+uploadServer"
       :on-success="uploadOnSuccess"
       :on-change="uploadOnChange"
       :show-file-list="false"
@@ -77,13 +77,14 @@
   export default {
     data() {
       return {
+        restApi: "http://192.168.31.38:8082/",
         form: {
           articleName: "",
           id: "",
-          remoteSrcUrl:""
+          remoteSrcUrl: ""
         },
         restaurants: [],//文章列表建议
-        uploadServer: "http://localhost:8082/blog/upload",
+        uploadServer: "/blog/upload",
         isEnlargeImage: false,//放大图片
         enlargeImage: '',//放大图片地址
         progress: 0,//上传进度
@@ -96,24 +97,24 @@
         const h = this.$createElement;
         let self = this;
         self.form.id = ""
-        self.fileList=[]
-        self.url = 'http://localhost:8082/blog/findArticle';
+        self.fileList = []
+        self.url = self.restApi + '/blog/findArticle';
         self.$axios.post(self.url, self.form).then((res) => {
           self.restaurants = res.data;
         }).then((res) => {
           // 调用 callback 返回建议列表的数据
           cb(self.restaurants);
-          if(self.restaurants.length === 0){
+          if (self.restaurants.length === 0) {
             this.$notify({
               title: '搜索结果',
               message: '没有搜索到相关文章图片,可以选择添加该文章',
               position: 'bottom-right',
               duration: 3000
             });
-          }else{
+          } else {
             this.$notify({
               title: '搜索结果',
-              message: '搜索到相关结果为'+ self.restaurants.length + '条',
+              message: '搜索到相关结果为' + self.restaurants.length + '条',
               position: 'bottom-right',
               duration: 3000
             });
@@ -124,7 +125,7 @@
         let self = this;
         self.form = item;
 
-        self.url = 'http://localhost:8082/blog/findImageByArticleId';
+        self.url = self.restApi + '/blog/findImageByArticleId';
         self.$axios.post(self.url, self.form).then((res) => {
           self.fileList = res.data;
         });
@@ -136,7 +137,7 @@
           return
         }
 
-        self.url = 'http://localhost:8082/blog/addArticle';
+        self.url = self.restApi + '/blog/addArticle';
         self.$axios.post(self.url, self.form).then((res) => {
           self.form = res.data;
         });
@@ -146,9 +147,10 @@
       onFetch() {
         let self = this;
 
-        self.url = 'http://localhost:8082/blog/fetch';
+        self.url = self.restApi + '/blog/fetch';
         self.$axios.post(self.url, self.form).then((res) => {
           console.log(res.data);
+          this.fileList.push({imageName: res.data, imageUrl: res.data});
         });
 
         console.log('submit!');
